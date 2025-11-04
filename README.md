@@ -1,2 +1,2 @@
-# AgendaFacil-_Scheduling
-Repositório criado para a criação do Microsserviços Scheduling do Projeto - https://github.com/pauloffrr/AgendaFacil
+# AgendaFacil - Scheduling
+Repositório criado para a criação do Microsserviços de Agendamento do Projeto - https://github.com/pauloffrr/AgendaFacil
