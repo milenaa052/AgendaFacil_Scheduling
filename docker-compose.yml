@@ -14,6 +14,8 @@ services:
       USERS_API: http://service-users:3000
       REDIS_HOST: redis-scheduling
       REDIS_PORT: 6379
+    env_file:
+      - scheduling-service/.env
     depends_on:
       scheduling-db:
         condition: service_healthy
