@@ -1,10 +1,37 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { SchedulingCompanyModule } from './scheduling-company/schedulingCompany.module';
+import { SchedulingCustomerModule } from './scheduling-customer/schedulingCustomer.module';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env'
+    }),
+    SequelizeModule.forRoot({
+      dialect: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT) || 5434,
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASS || 'postgres',
+      database: process.env.DB_NAME || 'schedulingdb',
+      autoLoadModels: true,
+      synchronize: true,
+      logging: false,
+    }),
+
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '7d' }
+    }),
+
+    SchedulingCompanyModule,
+    SchedulingCustomerModule
+  ],
+  providers: [JwtStrategy]
 })
 export class AppModule {}

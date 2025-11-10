@@ -6,6 +6,6 @@ export class CreateSchedulingCompanyDto {
     @IsString() title: string;
     @IsDateString() startDate: string;
     @IsDateString() endDate: string;
-    @IsNumber() startHour: string;
+    @IsString() startHour: string;
     @IsString() endHour: string;
 }
