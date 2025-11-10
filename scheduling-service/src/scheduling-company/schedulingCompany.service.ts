@@ -72,8 +72,8 @@ export class SchedulingCompanyService {
             companyId: createSchedulingCompanyDto.companyId,
             customerId: createSchedulingCompanyDto.customerId,
             title: createSchedulingCompanyDto.title,
-            startDate: new Date(createSchedulingCompanyDto.startDate),
-            endDate: new Date(createSchedulingCompanyDto.endDate),
+            startDate: createSchedulingCompanyDto.startDate,
+            endDate: createSchedulingCompanyDto.endDate,
             startHour: createSchedulingCompanyDto.startHour,
             endHour: createSchedulingCompanyDto.endHour,
             status: SchedulingCompanyStatus.PENDING
