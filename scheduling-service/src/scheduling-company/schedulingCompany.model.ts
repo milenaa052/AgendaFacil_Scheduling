@@ -10,8 +10,8 @@ export interface SchedulingCompanyCreationAttributes {
     companyId: number;
     customerId: number;
     title: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     startHour: string;
     endHour: string;
     status: SchedulingCompanyStatus;
@@ -48,16 +48,16 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
     declare title: string;
 
     @Column({ 
-        type: DataType.DATE,
+        type: DataType.STRING,
         allowNull: false 
     })
-    declare startDate: Date;
+    declare startDate: string;
 
     @Column({ 
-        type: DataType.DATE,
+        type: DataType.STRING,
         allowNull: false 
     })
-    declare endDate: Date;
+    declare endDate: string;
 
     @Column({ 
         type: DataType.STRING,
