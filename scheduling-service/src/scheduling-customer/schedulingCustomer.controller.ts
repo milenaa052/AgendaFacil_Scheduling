@@ -27,10 +27,11 @@ export class SchedulingCustomerController {
         return this.schedulingCustomerService.findById(id);
     }
 
-    @Get('scheduling-customer/:customerId')
+    @Get('/customer/:customerId')
     @UseGuards(AuthGuard('jwt'))
-    async findByCustomerId(@Param('customerId', ParseIntPipe) customerId: number) {
-        return this.schedulingCustomerService.findByCustomerId(customerId);
+    async findByCustomerId(@Param('customerId', ParseIntPipe) customerId: number, @Req() req) {
+        const token = req.headers.authorization;
+        return this.schedulingCustomerService.findByCustomerId(customerId, token);
     }
 
     @Put(':id')

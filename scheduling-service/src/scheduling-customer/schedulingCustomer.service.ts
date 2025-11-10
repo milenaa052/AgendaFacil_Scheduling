@@ -6,6 +6,19 @@ import { UpdateSchedulingCustomerDto } from './dto/update-scheduling-customer.dt
 import { SchedulingCustomerStatus } from './schedulingCustomer.model';
 import { HttpService } from 'src/http/http.service';
 
+export interface CustomerResponse {
+    idCustomer: number;
+    name: string;
+}
+
+export interface CompanyResponse {
+    idCompany: number;
+    name: string;
+    street: string;
+    number: string;
+    phone: string;
+}
+
 @Injectable()
 export class SchedulingCustomerService {
     constructor(
@@ -80,57 +93,81 @@ export class SchedulingCustomerService {
         return schedulingCustomer;
     }
 
-    async findByCustomerId(customerId: number) {
-        const { data: customer } = await this.http.instance.get(`/customer/${customerId}`);
-        if (!customer) {
-            throw new NotFoundException('Cliente não encontrado!');
+    async findByCustomerId(customerId: number, token: string) {
+        let customer: CustomerResponse;
+        try {
+            const response = await this.http.instance.get<CustomerResponse>(`customer/${customerId}`, {
+                headers: { Authorization: token }
+            });
+
+            customer = response.data;
+        } catch (error) {
+            if (error.response?.status === 404) {
+                throw new NotFoundException('Cliente não encontrado!');
+            }
+
+            throw new BadRequestException(error.response?.data?.message || 'Erro ao validar cliente');
         }
 
         const schedulings = await this.schedulingCustomerModel.findAll({
             where: { customerId },
-            order: [['startDate', 'DESC']],
+            order: [['startDate', 'DESC']]
         });
 
         if (schedulings.length === 0) {
             return [];
         }
 
-        const companyIds = [...new Set(schedulings.map(scheduling => scheduling.companyId))];
-        const companies = await Promise.all(
-            companyIds.map(id => this.http.instance.get(`/company/${id}`).then(res => res.data))
-        );
 
-        const companyMap = new Map();
-        companies.forEach(c => {
-            companyMap.set(c.idCompany, c);
-        });
+        const companyIds = [...new Set(schedulings.map(s => s.companyId))];
 
-        const result = schedulings.map(scheduling => {
-            const company = companyMap.get(scheduling.customerId);
+        let companies: CompanyResponse[];
+        try {
+            companies = await Promise.all(
+                companyIds.map(async (id) => {
+                    const res = await this.http.instance.get<CompanyResponse>(`company/${id}`, {
+                        headers: { Authorization: token }
+                    });
+                    return res.data;
+                })
+            );
+        } catch (error) {
+            if (error.response?.status === 404) {
+                throw new NotFoundException('Alguma empresa vinculada ao agendamento não foi encontrada!');
+            }
+
+            throw new BadRequestException(error.response?.data?.message || 'Erro ao validar empresa(s)');
+        }
+
+        const companyMap = new Map<number, CompanyResponse>();
+        companies.forEach(c => companyMap.set(c.idCompany, c));
+
+        return schedulings.map(scheduling => {
+            const company = companyMap.get(scheduling.companyId);
+
             return {
                 idScheduling: scheduling.idSchedulingCustomer,
+                title: scheduling.title,
                 startDate: scheduling.startDate,
                 endDate: scheduling.endDate,
                 startHour: scheduling.startHour,
                 endHour: scheduling.endHour,
                 status: scheduling.status,
-            customer: {
-                idCustomer: customer.idCustomer,
-                name: customer.name,
-            },
-            company: company
-                ? {
+
+                customer: {
+                    idCustomer: customer.idCustomer,
+                    name: customer.name
+                },
+
+                company: company ? {
                     idCompany: company.idCompany,
                     name: company.name,
                     street: company.street,
                     number: company.number,
                     phone: company.phone
-                }
-                : null,
+                } : null
             };
         });
-
-        return result;
     }
 
     async update(id: number, dto: UpdateSchedulingCustomerDto) {

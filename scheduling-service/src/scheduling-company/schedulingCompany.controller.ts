@@ -27,10 +27,11 @@ export class SchedulingCompanyController {
         return this.schedulingCompanyService.findById(id);
     }
 
-    @Get('scheduling-company/:companyId')
+    @Get('/company/:companyId')
     @UseGuards(AuthGuard('jwt'))
-    async findByCompanyId(@Param('companyId', ParseIntPipe) companyId: number) {
-        return this.schedulingCompanyService.findByCompanyId(companyId);
+    async findByCompanyId(@Param('companyId', ParseIntPipe) companyId: number, @Req() req) {
+        const token = req.headers.authorization;
+        return this.schedulingCompanyService.findByCompanyId(companyId, token);
     }
 
     @Put(':id')
