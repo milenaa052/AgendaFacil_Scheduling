@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { SchedulingCompanyModule } from './scheduling-company/schedulingCompany.module';
 import { SchedulingCustomerModule } from './scheduling-customer/schedulingCustomer.module';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -21,8 +23,15 @@ import { SchedulingCustomerModule } from './scheduling-customer/schedulingCustom
       synchronize: true,
       logging: false,
     }),
+
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '7d' }
+    }),
+
     SchedulingCompanyModule,
     SchedulingCustomerModule
   ],
+  providers: [JwtStrategy]
 })
 export class AppModule {}
