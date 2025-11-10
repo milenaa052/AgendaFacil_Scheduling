@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Put, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { SchedulingCompanyService } from './schedulingCompany.service';
 import { CreateSchedulingCompanyDto } from './dto/create-scheduling-company.dto';
 import { UpdateSchedulingCompanyDto } from './dto/update-scheduling-company.dto';
@@ -10,8 +10,9 @@ export class SchedulingCompanyController {
 
     @Post()
     @UseGuards(AuthGuard('jwt'))
-    async create(@Body() createSchedulingCompanyDto: CreateSchedulingCompanyDto) {
-        return this.schedulingCompanyService.create(createSchedulingCompanyDto);
+    async create(@Body() dto: CreateSchedulingCompanyDto, @Req() req) {
+        const token = req.headers.authorization;
+        return this.schedulingCompanyService.create(dto, token);
     }
 
     @Get()
