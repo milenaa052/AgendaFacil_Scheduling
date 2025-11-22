@@ -5,6 +5,8 @@ import { CreateSchedulingCompanyDto } from './dto/create-scheduling-company.dto'
 import { UpdateSchedulingCompanyDto } from './dto/update-scheduling-company.dto';
 import { SchedulingCompanyStatus } from './schedulingCompany.model';
 import { HttpService } from 'src/http/http.service';
+import { SchedulingCustomer } from 'src/scheduling-customer/schedulingCustomer.model';
+import { SchedulingCustomerStatus } from 'src/scheduling-customer/schedulingCustomer.model';
 
 export interface CompanyResponse {
     idCompany: number;
@@ -76,7 +78,7 @@ export class SchedulingCompanyService {
             endDate: createSchedulingCompanyDto.endDate,
             startHour: createSchedulingCompanyDto.startHour,
             endHour: createSchedulingCompanyDto.endHour,
-            status: SchedulingCompanyStatus.PENDING
+            status: SchedulingCompanyStatus.CONFIRMED
         };
 
         return await this.schedulingCompanyModel.create(SchedulingCompanyData);
@@ -186,12 +188,11 @@ export class SchedulingCompanyService {
         }
 
         const validStatuses = [
-            SchedulingCompanyStatus.PENDING,
             SchedulingCompanyStatus.CONFIRMED,
             SchedulingCompanyStatus.CANCELLED
         ];
         if (dto.status && !validStatuses.includes(dto.status)) {
-            throw new BadRequestException('Status deve ser PENDING, CONFIRMED ou CANCELLED');
+            throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
         }
 
         const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status'];
@@ -202,6 +203,21 @@ export class SchedulingCompanyService {
         }
 
         await scheduling.save();
+
+        if (dto.status) {
+            await SchedulingCustomer.update(
+                { status: SchedulingCustomerStatus[dto.status] },
+                {
+                    where: {
+                        customerId: scheduling.customerId,
+                        companyId: scheduling.companyId,
+                        startDate: scheduling.startDate,
+                        startHour: scheduling.startHour
+                    }
+                }
+            );
+        }
+
         return scheduling;
     }
 }
