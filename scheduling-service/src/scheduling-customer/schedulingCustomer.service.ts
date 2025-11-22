@@ -5,6 +5,8 @@ import { CreateSchedulingCustomerDto } from './dto/create-scheduling-customer.dt
 import { UpdateSchedulingCustomerDto } from './dto/update-scheduling-customer.dto';
 import { SchedulingCustomerStatus } from './schedulingCustomer.model';
 import { HttpService } from 'src/http/http.service';
+import { SchedulingCompany } from 'src/scheduling-company/schedulingCompany.model';
+import { SchedulingCompanyStatus } from 'src/scheduling-company/schedulingCompany.model';
 
 export interface CustomerResponse {
     idCustomer: number;
@@ -76,7 +78,7 @@ export class SchedulingCustomerService {
             endDate: createSchedulingCustomerDto.endDate,
             startHour: createSchedulingCustomerDto.startHour,
             endHour: createSchedulingCustomerDto.endHour,
-            status: SchedulingCustomerStatus.PENDING
+            status: SchedulingCustomerStatus.CONFIRMED
         };
 
         return await this.schedulingCustomerModel.create(SchedulingCustomerData);
@@ -185,12 +187,11 @@ export class SchedulingCustomerService {
         }
 
         const validStatuses = [
-            SchedulingCustomerStatus.PENDING,
             SchedulingCustomerStatus.CONFIRMED,
             SchedulingCustomerStatus.CANCELLED
         ];
         if (dto.status && !validStatuses.includes(dto.status)) {
-            throw new BadRequestException('Status deve ser PENDING, CONFIRMED ou CANCELLED');
+            throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
         }
 
         const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status'];
@@ -201,6 +202,21 @@ export class SchedulingCustomerService {
         }
 
         await scheduling.save();
+
+        if (dto.status) {
+            await SchedulingCompany.update(
+                { status: SchedulingCompanyStatus[dto.status] },
+                {
+                    where: {
+                        customerId: scheduling.customerId,
+                        companyId: scheduling.companyId,
+                        startDate: scheduling.startDate,
+                        startHour: scheduling.startHour
+                    }
+                }
+            );
+        }
+
         return scheduling;
     }
 }

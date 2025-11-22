@@ -1,7 +1,6 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 export enum SchedulingCustomerStatus {
-    PENDING = 'PENDING',
     CONFIRMED = 'CONFIRMED',
     CANCELLED = 'CANCELLED'
 }
@@ -74,7 +73,7 @@ export class SchedulingCustomer extends Model<SchedulingCustomer, SchedulingCust
     @Column({ 
         type: DataType.ENUM(...Object.values(SchedulingCustomerStatus)),
         allowNull: false,
-        defaultValue: SchedulingCustomerStatus.PENDING
+        defaultValue: SchedulingCustomerStatus.CONFIRMED
     })
     declare status: SchedulingCustomerStatus;
 }
