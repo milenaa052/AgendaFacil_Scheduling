@@ -16,6 +16,7 @@ export interface CustomerResponse {
 export interface CompanyResponse {
     idCompany: number;
     name: string;
+    profession: string;
     street: string;
     number: string;
     phone: string;
@@ -38,7 +39,7 @@ export class SchedulingCustomerService {
 
         let customer;
         try {
-            const response = await this.http.instance.get(`customer/${createSchedulingCustomerDto.customerId}`, {
+            const response = await this.http.users.get(`customer/${createSchedulingCustomerDto.customerId}`, {
                 headers: { Authorization: token }
             });
             customer = response.data;
@@ -55,7 +56,7 @@ export class SchedulingCustomerService {
 
         let company;
         try {
-            const response = await this.http.instance.get(`company/${createSchedulingCustomerDto.companyId}`, {
+            const response = await this.http.users.get(`company/${createSchedulingCustomerDto.companyId}`, {
                 headers: { Authorization: token }
             });
             company = response.data;
@@ -98,7 +99,7 @@ export class SchedulingCustomerService {
     async findByCustomerId(customerId: number, token: string) {
         let customer: CustomerResponse;
         try {
-            const response = await this.http.instance.get<CustomerResponse>(`customer/${customerId}`, {
+            const response = await this.http.users.get<CustomerResponse>(`customer/${customerId}`, {
                 headers: { Authorization: token }
             });
 
@@ -127,7 +128,7 @@ export class SchedulingCustomerService {
         try {
             companies = await Promise.all(
                 companyIds.map(async (id) => {
-                    const res = await this.http.instance.get<CompanyResponse>(`company/${id}`, {
+                    const res = await this.http.users.get<CompanyResponse>(`company/${id}`, {
                         headers: { Authorization: token }
                     });
                     return res.data;
@@ -164,6 +165,7 @@ export class SchedulingCustomerService {
                 company: company ? {
                     idCompany: company.idCompany,
                     name: company.name,
+                    profession: company.profession,
                     street: company.street,
                     number: company.number,
                     phone: company.phone

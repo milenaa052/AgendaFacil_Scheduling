@@ -5,16 +5,27 @@ import axios, { AxiosInstance } from 'axios';
 @Injectable()
 export class HttpService {
 
-    private client: AxiosInstance;
+    private usersClient: AxiosInstance;
+    private notificationsClient: AxiosInstance;
 
     constructor(cfg: ConfigService) {
-        this.client = axios.create({
+
+        this.usersClient = axios.create({
             baseURL: cfg.get('USERS_API', 'http://service-users:3000'),
+            timeout: 5000,
+        });
+
+        this.notificationsClient = axios.create({
+            baseURL: cfg.get('NOTIFICATIONS_API', 'http://service-notifications:3000'),
             timeout: 5000,
         });
     }
 
-    get instance() {
-        return this.client;
+    get users() {
+        return this.usersClient;
+    }
+
+    get notifications() {
+        return this.notificationsClient;
     }
 }

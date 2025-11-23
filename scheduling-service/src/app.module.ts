@@ -5,9 +5,11 @@ import { SchedulingCompanyModule } from './scheduling-company/schedulingCompany.
 import { SchedulingCustomerModule } from './scheduling-customer/schedulingCustomer.module';
 import { JwtStrategy } from './auth/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env'
@@ -26,7 +28,8 @@ import { JwtModule } from '@nestjs/jwt';
 
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '7d' }
+      signOptions: { expiresIn: '7d' },
+      global: true
     }),
 
     SchedulingCompanyModule,
