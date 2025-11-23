@@ -10,5 +10,5 @@ export class UpdateSchedulingCompanyDto {
     @IsOptional() @IsString() startHour?: string;
     @IsOptional() @IsString() endHour?: string;
     @IsOptional() @IsEnum(SchedulingCompanyStatus) status?: SchedulingCompanyStatus;
-    @IsOptional() @IsBoolean() notificationSend?: boolean;
+    @IsOptional() @IsBoolean() notificationSent?: boolean;
 }

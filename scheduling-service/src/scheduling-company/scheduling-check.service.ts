@@ -54,7 +54,7 @@ export class SchedulingCheckService {
                 const [hour, minute, second] = sch.endHour.split(':').map(Number);
 
                 const endDate = new Date(year, month - 1, day, hour, minute, second || 0);
-                const tenMinutesAfter = new Date(endDate.getTime() + 1 * 60000);
+                const tenMinutesAfter = new Date(endDate.getTime() + 10 * 60000);
 
                 console.log(`Agendamento ${sch.idSchedulingCompany} - Término Previsto: ${endDate.toLocaleString()}`);
                 console.log(`Agendamento ${sch.idSchedulingCompany} - 10min Após: ${tenMinutesAfter.toLocaleString()}`);
