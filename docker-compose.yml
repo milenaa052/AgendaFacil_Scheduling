@@ -12,6 +12,7 @@ services:
       DB_NAME: schedulingdb
       DB_PORT: 5432
       USERS_API: http://service-users:3000
+      NOTIFICATIONS_API: http://service-notifications:3000
       REDIS_HOST: redis-scheduling
       REDIS_PORT: 6379
     env_file:

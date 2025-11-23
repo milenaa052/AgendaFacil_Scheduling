@@ -38,7 +38,7 @@ export class SchedulingCompanyService {
 
         let customer;
         try {
-            const response = await this.http.instance.get(`customer/${createSchedulingCompanyDto.customerId}`, {
+            const response = await this.http.users.get(`customer/${createSchedulingCompanyDto.customerId}`, {
                 headers: { Authorization: token }
             });
             customer = response.data;
@@ -55,7 +55,7 @@ export class SchedulingCompanyService {
 
         let company;
         try {
-            const response = await this.http.instance.get(`company/${createSchedulingCompanyDto.companyId}`, {
+            const response = await this.http.users.get(`company/${createSchedulingCompanyDto.companyId}`, {
                 headers: { Authorization: token }
             });
             company = response.data;
@@ -78,7 +78,8 @@ export class SchedulingCompanyService {
             endDate: createSchedulingCompanyDto.endDate,
             startHour: createSchedulingCompanyDto.startHour,
             endHour: createSchedulingCompanyDto.endHour,
-            status: SchedulingCompanyStatus.CONFIRMED
+            status: SchedulingCompanyStatus.CONFIRMED,
+            notificationSent: false
         };
 
         return await this.schedulingCompanyModel.create(SchedulingCompanyData);
@@ -98,7 +99,7 @@ export class SchedulingCompanyService {
     async findByCompanyId(companyId: number, token: string) {
         let company: CompanyResponse;
         try {
-            const response = await this.http.instance.get<CompanyResponse>(`company/${companyId}`, {
+            const response = await this.http.users.get<CompanyResponse>(`company/${companyId}`, {
                 headers: { Authorization: token }
             });
 
@@ -126,7 +127,7 @@ export class SchedulingCompanyService {
         try {
             customers = await Promise.all(
                 customerIds.map(async (id) => {
-                    const res = await this.http.instance.get<CustomerResponse>(`customer/${id}`, {
+                    const res = await this.http.users.get<CustomerResponse>(`customer/${id}`, {
                         headers: { Authorization: token }
                     });
                     return res.data;
@@ -195,7 +196,7 @@ export class SchedulingCompanyService {
             throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
         }
 
-        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status'];
+        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status', 'notificationSend'];
         for (const key of allowedFields) {
             if (dto[key] !== undefined) {
                 scheduling[key] = dto[key];

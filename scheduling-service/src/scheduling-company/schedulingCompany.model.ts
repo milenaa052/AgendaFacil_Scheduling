@@ -14,6 +14,7 @@ export interface SchedulingCompanyCreationAttributes {
     startHour: string;
     endHour: string;
     status: SchedulingCompanyStatus;
+    notificationSent: boolean;
 }
 
 @Table({ tableName: 'SchedulingCompany', timestamps: false, modelName: 'SchedulingCompany' })
@@ -76,4 +77,10 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
         defaultValue: SchedulingCompanyStatus.CONFIRMED
     })
     declare status: SchedulingCompanyStatus;
+
+    @Column({
+    type: DataType.BOOLEAN,
+        defaultValue: false,
+    })
+    notificationSent: boolean;
 }

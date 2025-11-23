@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { SchedulingCompanyStatus } from '../schedulingCompany.model';
 
 export class UpdateSchedulingCompanyDto {
@@ -10,4 +10,5 @@ export class UpdateSchedulingCompanyDto {
     @IsOptional() @IsString() startHour?: string;
     @IsOptional() @IsString() endHour?: string;
     @IsOptional() @IsEnum(SchedulingCompanyStatus) status?: SchedulingCompanyStatus;
+    @IsOptional() @IsBoolean() notificationSend?: boolean;
 }
