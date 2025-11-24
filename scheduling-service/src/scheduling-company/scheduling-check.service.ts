@@ -1,4 +1,4 @@
-import { Injectable, UseGuards } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/sequelize';
 import { SchedulingCompany } from './schedulingCompany.model';
@@ -32,7 +32,7 @@ export class SchedulingCheckService {
         console.log('Executando verificação de serviços finalizados...');
         
         const now = new Date();
-        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000); // 5 minutos de tolerância
+        const tenMinutesAgo = new Date(now.getTime() - 10 * 60000);
 
         const schedulings = await this.schedulingModel.findAll({
             where: { 
@@ -50,22 +50,25 @@ export class SchedulingCheckService {
 
         for (const sch of schedulings) {
 
-            if (sch.lastExtension && sch.lastExtension > fiveMinutesAgo) {
-                console.log(`Agendamento ${sch.idSchedulingCompany} ignorado: Atualizado recentemente (5min).`);
-                continue; 
+            if (sch.lastExtension && sch.lastExtension > tenMinutesAgo) {
+                console.log("Ignorando, ainda está dentro da janela de extensão");
+                continue;
             }
         
             try {
-                const [year, month, day] = sch.endDate.split('-').map(Number);
-                const [hour, minute, second] = sch.endHour.split(':').map(Number);
+                const endDate = new Date(`${sch.endDate}T${sch.endHour}:00-03:00`);
 
-                const endDate = new Date(year, month - 1, day, hour, minute, second || 0);
+                if (isNaN(endDate.getTime())) {
+                    throw new Error("Data final inválida.");
+                }
+
                 const tenMinutesAfter = new Date(endDate.getTime() + 10 * 60000);
 
-                console.log(`Agendamento ${sch.idSchedulingCompany} - Término Previsto: ${endDate.toLocaleString()}`);
-                console.log(`Agendamento ${sch.idSchedulingCompany} - 10min Após: ${tenMinutesAfter.toLocaleString()}`);
+                console.log(`Agendamento ${sch.idSchedulingCompany} - Término Previsto (UTC): ${endDate.toISOString()}`);
+                console.log(`Agendamento ${sch.idSchedulingCompany} - 10min Após (UTC): ${tenMinutesAfter.toISOString()}`);
 
-                if (now < tenMinutesAfter) continue;
+                if (now.getTime() < tenMinutesAfter.getTime()) continue;
+
             } catch (dateError) {
                 console.error(`Erro ao processar data/hora do agendamento ${sch.idSchedulingCompany}:`, sch.endDate, sch.endHour, dateError);
                 continue;
