@@ -102,7 +102,13 @@ export class SchedulingCompanyService {
             lastExtension: createSchedulingCompanyDto.lastExtension
         };
 
-        return await this.schedulingCompanyModel.create(SchedulingCompanyData);
+        const schedulingCompany = await this.schedulingCompanyModel.create(SchedulingCompanyData);
+
+        const cacheKey = `company:${createSchedulingCompanyDto}`;
+        await this.redis.getClient().del(cacheKey);
+        console.log(`🗑️ Cache invalidado: ${cacheKey}`);
+
+        return schedulingCompany;
     }
 
     async findAll() {
@@ -311,6 +317,10 @@ export class SchedulingCompanyService {
         }
 
         await scheduling.save();
+
+        const cacheKey = `company:${scheduling.idSchedulingCompany}`;
+        await this.redis.getClient().del(cacheKey);
+        console.log(`🗑️ Cache invalidado: ${cacheKey}`);
 
         if (dto.status) {
             await SchedulingCustomer.update(
