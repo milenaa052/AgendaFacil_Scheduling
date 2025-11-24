@@ -6,6 +6,7 @@ import { SchedulingCustomerModule } from './scheduling-customer/schedulingCustom
 import { JwtStrategy } from './auth/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
 
     SchedulingCompanyModule,
-    SchedulingCustomerModule
+    SchedulingCustomerModule,
+    RedisModule
   ],
   providers: [JwtStrategy]
 })

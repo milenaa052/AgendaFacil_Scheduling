@@ -7,6 +7,7 @@ import { SchedulingCompanyStatus } from './schedulingCompany.model';
 import { HttpService } from 'src/http/http.service';
 import { SchedulingCustomer } from 'src/scheduling-customer/schedulingCustomer.model';
 import { SchedulingCustomerStatus } from 'src/scheduling-customer/schedulingCustomer.model';
+import { RedisService } from 'src/redis/redis.service';
 
 export interface CompanyResponse {
     idCompany: number;
@@ -36,7 +37,8 @@ export class SchedulingCompanyService {
     constructor(
         @InjectModel(SchedulingCompany) private schedulingCompanyModel: typeof SchedulingCompany,
         @InjectModel(SchedulingCustomer) private schedulingCustomerModel: typeof SchedulingCustomer,
-        private http: HttpService
+        private http: HttpService,
+        private redis: RedisService
     ) {}
 
     async create(createSchedulingCompanyDto: CreateSchedulingCompanyDto, token: string): Promise<SchedulingCompany> {
@@ -115,6 +117,27 @@ export class SchedulingCompanyService {
     }
 
     async findByCompanyId(companyId: number, token: string) {
+        if (!companyId) {
+            throw new BadRequestException("O ID da empresa é obrigatório!");
+        }
+
+        const cacheKey = `company:${companyId}`;
+
+        try {
+            const cache = await this.redis.getClient();
+
+            const pong = await cache.ping();
+            console.log("Redis ping response:", pong);
+
+            const cachedData = await cache.get(cacheKey);
+            if (cachedData) {
+                console.log(`♻️ Retornando agendamentos da empresa do cache (${cacheKey})`);
+                return JSON.parse(cachedData);
+            }
+        } catch (error) {
+            console.log("❌ Erro ao acessar o cache:", error);
+        }
+
         let company: CompanyResponse;
         try {
             const response = await this.http.users.get<CompanyResponse>(`company/${companyId}`, {
@@ -180,7 +203,7 @@ export class SchedulingCompanyService {
         const schedulingCustomerMap = new Map<number, SchedulingCustomerResponse>();
         schedulingCustomers.forEach(sc => schedulingCustomerMap.set(sc.idSchedulingCustomer, sc));
 
-        return schedulings.map(scheduling => {
+        const result = schedulings.map(scheduling => {
             const customer = customerMap.get(scheduling.customerId);
             const schedulingCustomer = schedulingCustomerMap.get(scheduling.schedulingCustomerId);
 
@@ -223,7 +246,27 @@ export class SchedulingCompanyService {
                     : null
             };
         });
+
+        try {
+            await this.redis.getClient().set(cacheKey, JSON.stringify(result), 'EX', 300);
+            console.log(`💾 Dados dos agendamentos da empresa salvos no cache (${cacheKey}) com TTL de 300s`);
+        } catch(error) {
+            console.log("❌ Erro ao salvar no cache:", error);
+        }
+
+        return result;
     }
+
+    async invalidateSchedulingCompanyCacheById(companyId: number) {
+        const pattern = `company:${companyId}*`;
+        const keys = await this.redis.getClient().keys(pattern);
+
+        for (const key of keys) {
+            await this.redis.getClient().del(key);
+            console.log(`🗑️ Cache da empresa invalidado: ${key}`);
+        }
+    }
+
 
     async update(id: number, dto: UpdateSchedulingCompanyDto) {
         const scheduling = await this.schedulingCompanyModel.findByPk(id);
