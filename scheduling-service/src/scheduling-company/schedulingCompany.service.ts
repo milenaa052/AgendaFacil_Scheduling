@@ -251,8 +251,9 @@ export class SchedulingCompanyService {
             throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
         }
 
+        let shouldUpdateLastExtension = false;
         if (dto.endHour !== undefined || dto.notificationSent !== undefined) {
-            scheduling.lastExtension = new Date();
+            shouldUpdateLastExtension = true;
         }
 
         const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status', 'notificationSent', 'lastExtension'];
@@ -262,16 +263,11 @@ export class SchedulingCompanyService {
             }
         }
 
-        await scheduling.save();
-
-        if (dto.endHour !== undefined) {
+        if (shouldUpdateLastExtension) {
             scheduling.lastExtension = new Date();
-            scheduling.endHour = dto.endHour;
         }
 
-        if (dto.notificationSent !== undefined) {
-            scheduling.notificationSent = dto.notificationSent;
-        }
+        await scheduling.save();
 
         if (dto.status) {
             await SchedulingCustomer.update(
