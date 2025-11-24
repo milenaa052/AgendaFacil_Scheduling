@@ -252,7 +252,7 @@ export class SchedulingCompanyService {
         }
 
         let shouldUpdateLastExtension = false;
-        if (dto.endHour !== undefined || dto.notificationSent !== undefined) {
+        if (dto.endHour !== undefined || dto.endDate !== undefined) {
             shouldUpdateLastExtension = true;
         }
 
