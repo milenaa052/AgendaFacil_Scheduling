@@ -32,6 +32,7 @@ export class SchedulingCheckService {
         console.log('Executando verificação de serviços finalizados...');
         
         const now = new Date();
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000); // 5 minutos de tolerância
 
         const schedulings = await this.schedulingModel.findAll({
             where: { 
@@ -48,6 +49,11 @@ export class SchedulingCheckService {
         }
 
         for (const sch of schedulings) {
+
+            if (sch.lastExtension && sch.lastExtension > fiveMinutesAgo) {
+                console.log(`Agendamento ${sch.idSchedulingCompany} ignorado: Atualizado recentemente (5min).`);
+                continue; 
+            }
         
             try {
                 const [year, month, day] = sch.endDate.split('-').map(Number);
@@ -98,6 +104,7 @@ export class SchedulingCheckService {
                 text: `O serviço agendado para ${customerData.name} estava previsto para terminar às ${sch.endHour}. O serviço foi concluído?`,
                 street: customerData.street,
                 number: customerData.number,
+                schedulingCompanyId: sch.idSchedulingCompany,
                 schedulingDate: sch.startDate,
                 schedulingStartTime: sch.startHour,
                 schedulingEndTime: sch.endHour,

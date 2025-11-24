@@ -8,6 +8,7 @@ export enum SchedulingCustomerStatus {
 export interface SchedulingCustomerCreationAttributes {
     companyId: number;
     customerId: number;
+    schedulingCompanyId: number;
     title: string;
     startDate: string;
     endDate: string;
@@ -39,6 +40,12 @@ export class SchedulingCustomer extends Model<SchedulingCustomer, SchedulingCust
         field: 'customerId'
     })
     declare customerId: number;
+
+    @Column({ 
+        type: DataType.INTEGER,
+        allowNull: true
+    })
+    declare schedulingCompanyId: number;
 
     @Column({ 
         type: DataType.STRING,

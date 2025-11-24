@@ -4,6 +4,7 @@ import { SchedulingCustomerStatus } from '../schedulingCustomer.model';
 export class UpdateSchedulingCustomerDto {
     @IsOptional() @IsNumber() companyId?: number;
     @IsOptional() @IsNumber() customerId?: number;
+    @IsOptional() @IsNumber() schedulingCompanyId?: number;
     @IsOptional() @IsString() title?: string;
     @IsOptional() @IsString() startDate?: string;
     @IsOptional() @IsString() endDate?: string;
