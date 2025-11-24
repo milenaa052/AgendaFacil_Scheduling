@@ -8,6 +8,7 @@ export enum SchedulingCompanyStatus {
 export interface SchedulingCompanyCreationAttributes {
     companyId: number;
     customerId: number;
+    schedulingCustomerId: number;
     title: string;
     startDate: string;
     endDate: string;
@@ -15,6 +16,7 @@ export interface SchedulingCompanyCreationAttributes {
     endHour: string;
     status: SchedulingCompanyStatus;
     notificationSent: boolean;
+    lastExtension: Date;
 }
 
 @Table({ tableName: 'SchedulingCompany', timestamps: false, modelName: 'SchedulingCompany' })
@@ -33,6 +35,13 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
         field: 'companyId'
     })
     declare companyId: number;
+
+    @Column({ 
+        type: DataType.INTEGER,
+        allowNull: false,
+        field: 'schedulingCustomerId'
+    })
+    declare schedulingCustomerId: number;
 
     @Column({ 
         type: DataType.INTEGER,
@@ -83,4 +92,10 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
         defaultValue: false,
     })
     notificationSent: boolean;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: true,
+    })
+    declare lastExtension: Date;
 }

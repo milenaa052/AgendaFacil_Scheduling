@@ -22,14 +22,25 @@ export interface CompanyResponse {
     phone: string;
 }
 
+export interface SchedulingCompanyResponse {
+    idSchedulingCompany: number;
+    title: string;
+    startDate: string;
+    endDate: string;
+    startHour: string;
+    endHour: string;
+    status: SchedulingCompanyStatus;
+}
+
 @Injectable()
 export class SchedulingCustomerService {
     constructor(
         @InjectModel(SchedulingCustomer) private schedulingCustomerModel: typeof SchedulingCustomer,
+        @InjectModel(SchedulingCompany) private schedulingCompanyModel: typeof SchedulingCompany,
         private http: HttpService
     ) {}
 
-    async create(createSchedulingCustomerDto: CreateSchedulingCustomerDto, token: string): Promise<SchedulingCustomer> {
+    async create(createSchedulingCustomerDto: CreateSchedulingCustomerDto, token: string) {
         const requiredFields = ['companyId', 'customerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour'];
         for (const field of requiredFields) {
             if (!createSchedulingCustomerDto[field]) {
@@ -71,18 +82,33 @@ export class SchedulingCustomerService {
             );
         }
 
-        const SchedulingCustomerData = {
-            companyId: createSchedulingCustomerDto.companyId,
-            customerId: createSchedulingCustomerDto.customerId,
-            title: createSchedulingCustomerDto.title,
-            startDate: createSchedulingCustomerDto.startDate,
-            endDate: createSchedulingCustomerDto.endDate,
-            startHour: createSchedulingCustomerDto.startHour,
-            endHour: createSchedulingCustomerDto.endHour,
-            status: SchedulingCustomerStatus.CONFIRMED
-        };
+        if (createSchedulingCustomerDto.schedulingCompanyId) {
+            const schedulingCompany = await this.schedulingCompanyModel.findByPk(
+                createSchedulingCustomerDto.schedulingCompanyId
+            );
+            
+            if(!schedulingCompany) {
+                throw new NotFoundException('Agendamento da empresa não encontrado!');
+            }
+        }
 
-        return await this.schedulingCustomerModel.create(SchedulingCustomerData);
+        try {
+            const SchedulingCustomerData = {
+                companyId: createSchedulingCustomerDto.companyId,
+                customerId: createSchedulingCustomerDto.customerId,
+                schedulingCompanyId: createSchedulingCustomerDto.schedulingCompanyId,
+                title: createSchedulingCustomerDto.title,
+                startDate: createSchedulingCustomerDto.startDate,
+                endDate: createSchedulingCustomerDto.endDate,
+                startHour: createSchedulingCustomerDto.startHour,
+                endHour: createSchedulingCustomerDto.endHour,
+                status: SchedulingCustomerStatus.CONFIRMED
+            };
+
+            return await this.schedulingCustomerModel.create(SchedulingCustomerData);
+        } catch(error) {
+            console.log("teste", error)
+        }
     }
 
     async findAll() {
@@ -121,7 +147,6 @@ export class SchedulingCustomerService {
             return [];
         }
 
-
         const companyIds = [...new Set(schedulings.map(s => s.companyId))];
 
         let companies: CompanyResponse[];
@@ -145,8 +170,44 @@ export class SchedulingCustomerService {
         const companyMap = new Map<number, CompanyResponse>();
         companies.forEach(c => companyMap.set(c.idCompany, c));
 
+        const validSchedulingCompanyIds: number[] = [...new Set(
+            schedulings.map(s => s.schedulingCompanyId)
+        )].filter((id): id is number => id !== null && id !== undefined);
+        
+        let schedulingCompanies: SchedulingCompanyResponse[] = [];
+        
+        if (validSchedulingCompanyIds.length > 0) {
+            try {
+                schedulingCompanies = await this.schedulingCompanyModel.findAll({
+                    where: { idSchedulingCompany: validSchedulingCompanyIds } 
+                });
+            } catch (error) {
+                throw new BadRequestException(error.response?.data?.message || 'Erro ao validar agendamentos das empresas');
+            }
+        }
+
+        const schedulingCompanyMap = new Map<number, SchedulingCompanyResponse>();
+        schedulingCompanies.forEach(sc => schedulingCompanyMap.set(sc.idSchedulingCompany, sc));
+
         return schedulings.map(scheduling => {
             const company = companyMap.get(scheduling.companyId);
+
+            let schedulingCompany: SchedulingCompanyResponse | undefined;
+            if (scheduling.schedulingCompanyId !== null && scheduling.schedulingCompanyId !== undefined) {
+                schedulingCompany = schedulingCompanyMap.get(scheduling.schedulingCompanyId as number);
+            }
+            
+            const schedulingCompanyResponse: SchedulingCompanyResponse | null = schedulingCompany 
+                ? {
+                    idSchedulingCompany: schedulingCompany.idSchedulingCompany,
+                    title: schedulingCompany.title,
+                    startDate: schedulingCompany.startDate,
+                    endDate: schedulingCompany.endDate,
+                    startHour: schedulingCompany.startHour,
+                    endHour: schedulingCompany.endHour,
+                    status: schedulingCompany.status as SchedulingCompanyStatus,
+                } 
+                : null;
 
             return {
                 idScheduling: scheduling.idSchedulingCustomer,
@@ -156,6 +217,8 @@ export class SchedulingCustomerService {
                 startHour: scheduling.startHour,
                 endHour: scheduling.endHour,
                 status: scheduling.status,
+
+                schedulingCompany: schedulingCompanyResponse,
 
                 customer: {
                     idCustomer: customer.idCustomer,
@@ -186,6 +249,10 @@ export class SchedulingCustomerService {
 
         if (dto.companyId && dto.companyId !== scheduling.companyId) { 
             throw new BadRequestException('Empresa não pode ser alterado!');
+        }
+
+        if (dto.schedulingCompanyId && dto.schedulingCompanyId !== scheduling.schedulingCompanyId) { 
+            throw new BadRequestException('Agendamento da empresa não pode ser alterado!');
         }
 
         const validStatuses = [
