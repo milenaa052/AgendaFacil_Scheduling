@@ -14,6 +14,7 @@ export interface SchedulingCompanyCreationAttributes {
     endDate: string;
     startHour: string;
     endHour: string;
+    budget: number;
     status: SchedulingCompanyStatus;
     notificationSent: boolean;
     lastExtension: Date;
@@ -79,6 +80,12 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
         allowNull: false 
     })
     declare endHour: string;
+
+    @Column({ 
+        type: DataType.FLOAT,
+        allowNull: true 
+    })
+    declare budget: number;
 
     @Column({ 
         type: DataType.ENUM(...Object.values(SchedulingCompanyStatus)),
