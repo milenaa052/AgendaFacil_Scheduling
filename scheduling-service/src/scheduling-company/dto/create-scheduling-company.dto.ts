@@ -9,5 +9,6 @@ export class CreateSchedulingCompanyDto {
     @IsString() endDate: string;
     @IsString() startHour: string;
     @IsString() endHour: string;
+    @IsOptional() @IsNumber() budget: number;
     @IsOptional() @IsDateString() lastExtension: Date;
 }

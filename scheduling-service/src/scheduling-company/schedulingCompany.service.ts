@@ -97,6 +97,7 @@ export class SchedulingCompanyService {
             endDate: createSchedulingCompanyDto.endDate,
             startHour: createSchedulingCompanyDto.startHour,
             endHour: createSchedulingCompanyDto.endHour,
+            budget: createSchedulingCompanyDto.budget,
             status: SchedulingCompanyStatus.CONFIRMED,
             notificationSent: false,
             lastExtension: createSchedulingCompanyDto.lastExtension
@@ -232,6 +233,7 @@ export class SchedulingCompanyService {
                 endDate: scheduling.endDate,
                 startHour: scheduling.startHour,
                 endHour: scheduling.endHour,
+                budget: scheduling.budget,
                 status: scheduling.status,
 
                 schedulingCustomer: schedulingCustomerResponse,
@@ -305,7 +307,7 @@ export class SchedulingCompanyService {
             shouldUpdateLastExtension = true;
         }
 
-        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status', 'notificationSent', 'lastExtension'];
+        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'budget', 'status', 'notificationSent', 'lastExtension'];
         for (const key of allowedFields) {
             if (dto[key] !== undefined) {
                 scheduling[key] = dto[key];
