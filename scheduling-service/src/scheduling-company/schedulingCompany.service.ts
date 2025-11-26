@@ -377,6 +377,12 @@ export class SchedulingCompanyService {
             throw new BadRequestException('Não é permitido excluir agendamentos que não tenha o status igual a BLOCKED!');
         }
 
+        await schedulingCompany.destroy();
+
+        const cacheKey = `company:${schedulingCompany.companyId}`;
+        await this.redis.getClient().del(cacheKey);
+        console.log(`🗑️ Cache invalidado: ${cacheKey}`);
+
         return { message: 'Agendamento deletado com sucesso!' };
     }
 }
