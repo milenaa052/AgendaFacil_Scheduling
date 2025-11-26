@@ -2,7 +2,9 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 export enum SchedulingCompanyStatus {
     CONFIRMED = 'CONFIRMED',
-    CANCELLED = 'CANCELLED'
+    CANCELLED = 'CANCELLED',
+    COMPLETED = 'COMPLETED',
+    BLOCKED = 'BLOCKED'
 }
 
 export interface SchedulingCompanyCreationAttributes {
@@ -14,6 +16,7 @@ export interface SchedulingCompanyCreationAttributes {
     endDate: string;
     startHour: string;
     endHour: string;
+    repeatScheduling: string;
     budget: number;
     status: SchedulingCompanyStatus;
     notificationSent: boolean;
@@ -39,17 +42,17 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
 
     @Column({ 
         type: DataType.INTEGER,
-        allowNull: false,
-        field: 'schedulingCustomerId'
-    })
-    declare schedulingCustomerId: number;
-
-    @Column({ 
-        type: DataType.INTEGER,
-        allowNull: false,
+        allowNull: true,
         field: 'customerId'
     })
     declare customerId: number;
+
+    @Column({ 
+        type: DataType.INTEGER,
+        allowNull: true,
+        field: 'schedulingCustomerId'
+    })
+    declare schedulingCustomerId: number;
 
     @Column({ 
         type: DataType.STRING,
@@ -82,6 +85,12 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
     declare endHour: string;
 
     @Column({ 
+        type: DataType.STRING,
+        allowNull: true 
+    })
+    declare repeatScheduling: string;
+
+    @Column({ 
         type: DataType.FLOAT,
         allowNull: true 
     })
@@ -89,8 +98,7 @@ export class SchedulingCompany extends Model<SchedulingCompany, SchedulingCompan
 
     @Column({ 
         type: DataType.ENUM(...Object.values(SchedulingCompanyStatus)),
-        allowNull: false,
-        defaultValue: SchedulingCompanyStatus.CONFIRMED
+        allowNull: false
     })
     declare status: SchedulingCompanyStatus;
 

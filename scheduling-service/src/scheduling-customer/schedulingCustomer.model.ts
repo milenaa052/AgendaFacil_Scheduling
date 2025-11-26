@@ -2,7 +2,8 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 export enum SchedulingCustomerStatus {
     CONFIRMED = 'CONFIRMED',
-    CANCELLED = 'CANCELLED'
+    CANCELLED = 'CANCELLED',
+    COMPLETED = 'COMPLETED'
 }
 
 export interface SchedulingCustomerCreationAttributes {

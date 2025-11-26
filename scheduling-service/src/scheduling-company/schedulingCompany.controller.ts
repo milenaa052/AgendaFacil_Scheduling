@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, Put, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Put, UseGuards, ParseIntPipe, Delete } from '@nestjs/common';
 import { SchedulingCompanyService } from './schedulingCompany.service';
 import { CreateSchedulingCompanyDto } from './dto/create-scheduling-company.dto';
 import { UpdateSchedulingCompanyDto } from './dto/update-scheduling-company.dto';
@@ -41,5 +41,11 @@ export class SchedulingCompanyController {
         @Body() updateRSchedulingCompanyDto: UpdateSchedulingCompanyDto
     ) {
         return await this.schedulingCompanyService.update(id, updateRSchedulingCompanyDto);
+    }
+
+    @Delete(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async deleteById(@Param('id', ParseIntPipe) id: number) {
+        return this.schedulingCompanyService.deleteById(id);
     }
 }

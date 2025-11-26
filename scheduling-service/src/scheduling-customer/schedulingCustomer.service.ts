@@ -305,10 +305,11 @@ export class SchedulingCustomerService {
 
         const validStatuses = [
             SchedulingCustomerStatus.CONFIRMED,
-            SchedulingCustomerStatus.CANCELLED
+            SchedulingCustomerStatus.CANCELLED,
+            SchedulingCustomerStatus.COMPLETED
         ];
         if (dto.status && !validStatuses.includes(dto.status)) {
-            throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
+            throw new BadRequestException('Status deve ser CONFIRMED, CANCELLED ou COMPLETED');
         }
 
         const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status'];
