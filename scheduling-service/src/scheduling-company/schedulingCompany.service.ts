@@ -114,10 +114,6 @@ export class SchedulingCompanyService {
         await this.redis.getClient().del(cacheKey);
         console.log(`🗑️ Cache invalidado: ${cacheKey}`);
 
-        const cacheKeyReports = `reports:${createSchedulingCompanyDto.companyId}`;
-        await this.redis.getClient().del(cacheKeyReports);
-        console.log(`🗑️ Cache dos relatórios invalidado: ${cacheKeyReports}`);
-
         return schedulingCompany;
     }
 
@@ -366,10 +362,6 @@ export class SchedulingCompanyService {
             const cacheKeyCustomer = `customer:${scheduling.customerId}`;
             await this.redis.getClient().del(cacheKeyCustomer);
             console.log(`🗑️ Cache do cliente invalidado após cross-update: ${cacheKeyCustomer}`);
-
-            const cacheKeyReports = `reports:${scheduling.companyId}`;
-            await this.redis.getClient().del(cacheKeyReports);
-            console.log(`🗑️ Cache dos relatórios invalidado: ${cacheKeyReports}`);
         }
 
         return scheduling;

@@ -3,13 +3,13 @@ import { SchedulingCompanyService } from './schedulingCompany.service';
 import { CreateSchedulingCompanyDto } from './dto/create-scheduling-company.dto';
 import { UpdateSchedulingCompanyDto } from './dto/update-scheduling-company.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { SchedulingCompletedService } from './schedulingReports.service';
+import { ReportsService } from './schedulingReports.service';
 
 @Controller('scheduling-company')
 export class SchedulingCompanyController {
     constructor( 
         private readonly schedulingCompanyService: SchedulingCompanyService,
-        private readonly reportsCompany: SchedulingCompletedService
+        private readonly reportsCompany: ReportsService
     ) {}
 
     @Post()
@@ -48,6 +48,23 @@ export class SchedulingCompanyController {
     ) {
         const token = req.headers.authorization;
         return this.reportsCompany.findByServiceCompleted(
+            companyId,
+            month,
+            year,
+            token
+        );
+    }
+
+    @Get('reports/budget/:companyId/:month/:year')
+    @UseGuards(AuthGuard('jwt'))
+    async findByTotalBudget(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Param('month') month: string,
+        @Param('year', ParseIntPipe) year: number,
+        @Req() req
+    ) {
+        const token = req.headers.authorization;
+        return this.reportsCompany.findByTotalBudget(
             companyId,
             month,
             year,
