@@ -42,28 +42,30 @@ export class SchedulingCompanyService {
     ) {}
 
     async create(createSchedulingCompanyDto: CreateSchedulingCompanyDto, token: string): Promise<SchedulingCompany> {
-        const requiredFields = ['companyId', 'customerId', 'schedulingCustomerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour'];
+        const requiredFields = ['companyId', 'title', 'startDate', 'endDate', 'startHour', 'endHour', 'status'];
         for (const field of requiredFields) {
             if (!createSchedulingCompanyDto[field]) {
                 throw new BadRequestException('Todos os campos são obrigatórios!');
             }
         }
 
-        let customer;
-        try {
-            const response = await this.http.users.get(`customer/${createSchedulingCompanyDto.customerId}`, {
-                headers: { Authorization: token }
-            });
-            customer = response.data;
-        } catch (error) {
+        if(createSchedulingCompanyDto.customerId) {
+            let customer;
+            try {
+                const response = await this.http.users.get(`customer/${createSchedulingCompanyDto.customerId}`, {
+                    headers: { Authorization: token }
+                });
+                customer = response.data;
+            } catch (error) {
 
-            if (error.response?.status === 404) {
-                throw new NotFoundException('Cliente não encontrado!');
+                if (error.response?.status === 404) {
+                    throw new NotFoundException('Cliente não encontrado!');
+                }
+
+                throw new BadRequestException(
+                    error.response?.data?.message || 'Erro ao validar cliente'
+                );
             }
-
-            throw new BadRequestException(
-                error.response?.data?.message || 'Erro ao validar cliente'
-            );
         }
 
         let company;
@@ -83,9 +85,11 @@ export class SchedulingCompanyService {
             );
         }
 
-        const schedulingCustomer = await this.schedulingCustomerModel.findByPk(createSchedulingCompanyDto.schedulingCustomerId);
-        if(!schedulingCustomer) {
-            throw new NotFoundException('Agendamento do cliente não encontrado!');
+        if(createSchedulingCompanyDto.schedulingCustomerId) {
+            const schedulingCustomer = await this.schedulingCustomerModel.findByPk(createSchedulingCompanyDto.schedulingCustomerId);
+            if(!schedulingCustomer) {
+                throw new NotFoundException('Agendamento do cliente não encontrado!');
+            }
         }
 
         const SchedulingCompanyData = {
@@ -97,8 +101,9 @@ export class SchedulingCompanyService {
             endDate: createSchedulingCompanyDto.endDate,
             startHour: createSchedulingCompanyDto.startHour,
             endHour: createSchedulingCompanyDto.endHour,
+            repeatScheduling: createSchedulingCompanyDto.repeatScheduling,
             budget: createSchedulingCompanyDto.budget,
-            status: SchedulingCompanyStatus.CONFIRMED,
+            status: createSchedulingCompanyDto.status,
             notificationSent: false,
             lastExtension: createSchedulingCompanyDto.lastExtension
         };
@@ -169,44 +174,58 @@ export class SchedulingCompanyService {
             return [];
         }
 
-        const customerIds = [...new Set(schedulings.map(s => s.customerId))];
+        const validCustomerIds = [...new Set(schedulings
+            .map(s => s.customerId)
+            .filter(id => id)
+        )];
 
         let customers: CustomerResponse[];
-        try {
-            customers = await Promise.all(
-                customerIds.map(async (id) => {
-                    const res = await this.http.users.get<CustomerResponse>(`customer/${id}`, {
-                        headers: { Authorization: token }
-                    });
-                    return res.data;
-                })
-            );
-        } catch (error) {
-            if (error.response?.status === 404) {
-                throw new NotFoundException('Algum cliente vinculado ao agendamento não foi encontrado!');
-            }
+        if (validCustomerIds.length > 0) {
+            try {
+                customers = await Promise.all(
+                    validCustomerIds.map(async (id) => {
+                        const res = await this.http.users.get<CustomerResponse>(`customer/${id}`, {
+                            headers: { Authorization: token }
+                        });
+                        return res.data;
+                    })
+                );
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    throw new NotFoundException('Algum cliente vinculado ao agendamento não foi encontrado!');
+                }
 
-            throw new BadRequestException(error.response?.data?.message || 'Erro ao validar cliente(s)');
+                throw new BadRequestException(error.response?.data?.message || 'Erro ao validar cliente(s)');
+            }
+        } else { 
+            customers = [];
         }
 
         const customerMap = new Map<number, CustomerResponse>();
         customers.forEach(c => customerMap.set(c.idCustomer, c));
 
-        const schedulingCustomerIds = [...new Set(schedulings.map(s => s.schedulingCustomerId))];
+        const validSchedulingCustomerIds = [...new Set(schedulings
+            .map(s => s.customerId)
+            .filter(id => id)
+        )];
 
         let schedulingCustomers: SchedulingCustomerResponse[];
-        try {
-            schedulingCustomers = await this.schedulingCustomerModel.findAll({
-                where: { idSchedulingCustomer: schedulingCustomerIds } 
-            });
-        } catch (error) {
-            if (error.response?.status === 404) {
-                throw new NotFoundException('Algum agendamento do cliente vinculado ao agendamento não foi encontrado!');
+        if(validSchedulingCustomerIds.length > 0) {
+            try {
+                schedulingCustomers = await this.schedulingCustomerModel.findAll({
+                    where: { idSchedulingCustomer: validSchedulingCustomerIds } 
+                });
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    throw new NotFoundException('Algum agendamento do cliente vinculado ao agendamento não foi encontrado!');
+                }
+
+                throw new BadRequestException(error.response?.data?.message || 'Erro ao validar agendamentos dos clientes');
             }
-
-            throw new BadRequestException(error.response?.data?.message || 'Erro ao validar agendamentos dos clientes');
+        } else {
+            schedulingCustomers = [];
         }
-
+        
         const schedulingCustomerMap = new Map<number, SchedulingCustomerResponse>();
         schedulingCustomers.forEach(sc => schedulingCustomerMap.set(sc.idSchedulingCustomer, sc));
 
@@ -296,10 +315,12 @@ export class SchedulingCompanyService {
 
         const validStatuses = [
             SchedulingCompanyStatus.CONFIRMED,
-            SchedulingCompanyStatus.CANCELLED
+            SchedulingCompanyStatus.CANCELLED,
+            SchedulingCompanyStatus.COMPLETED,
+            SchedulingCompanyStatus.BLOCKED
         ];
         if (dto.status && !validStatuses.includes(dto.status)) {
-            throw new BadRequestException('Status deve ser CONFIRMED ou CANCELLED');
+            throw new BadRequestException('Status deve ser CONFIRMED, CANCELLED, COMPLETED ou BLOCKED');
         }
 
         let shouldUpdateLastExtension = false;
@@ -307,7 +328,7 @@ export class SchedulingCompanyService {
             shouldUpdateLastExtension = true;
         }
 
-        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'budget', 'status', 'notificationSent', 'lastExtension'];
+        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'repeateScheduling', 'budget', 'status', 'notificationSent', 'lastExtension'];
         for (const key of allowedFields) {
             if (dto[key] !== undefined) {
                 scheduling[key] = dto[key];
@@ -343,5 +364,19 @@ export class SchedulingCompanyService {
         }
 
         return scheduling;
+    }
+
+    async deleteById(id: number): Promise<{ message: string }> {
+        const schedulingCompany = await this.schedulingCompanyModel.findByPk(id);
+        
+        if (!schedulingCompany) {
+            throw new NotFoundException('Agendamento bloqueado não encontrado!');
+        }
+
+        if(schedulingCompany.status != "BLOCKED") {
+            throw new BadRequestException('Não é permitido excluir agendamentos que não tenha o status igual a BLOCKED!');
+        }
+
+        return { message: 'Agendamento deletado com sucesso!' };
     }
 }
