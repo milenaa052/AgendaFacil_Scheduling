@@ -9,6 +9,7 @@ import { HttpService } from 'src/http/http.service';
 import { SchedulingCustomerModule } from 'src/scheduling-customer/schedulingCustomer.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { RedisService } from 'src/redis/redis.service';
+import { SchedulingCompletedService } from './schedulingReports.service';
 
 const CompanySequelizeModule = SequelizeModule.forFeature([SchedulingCompany]);
 
@@ -20,7 +21,13 @@ const CompanySequelizeModule = SequelizeModule.forFeature([SchedulingCompany]);
         RedisModule
     ],
     controllers: [SchedulingCompanyController],
-    providers: [SchedulingCompanyService, HttpService, SchedulingCheckService, RedisService],
+    providers: [
+        SchedulingCompanyService, 
+        HttpService, 
+        SchedulingCheckService, 
+        RedisService, 
+        SchedulingCompletedService
+    ],
     exports: [
         SchedulingCompanyService,
         CompanySequelizeModule

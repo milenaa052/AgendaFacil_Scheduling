@@ -3,10 +3,14 @@ import { SchedulingCompanyService } from './schedulingCompany.service';
 import { CreateSchedulingCompanyDto } from './dto/create-scheduling-company.dto';
 import { UpdateSchedulingCompanyDto } from './dto/update-scheduling-company.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { SchedulingCompletedService } from './schedulingReports.service';
 
 @Controller('scheduling-company')
 export class SchedulingCompanyController {
-    constructor( private readonly schedulingCompanyService: SchedulingCompanyService) {}
+    constructor( 
+        private readonly schedulingCompanyService: SchedulingCompanyService,
+        private readonly reportsCompany: SchedulingCompletedService
+    ) {}
 
     @Post()
     @UseGuards(AuthGuard('jwt'))
@@ -32,6 +36,23 @@ export class SchedulingCompanyController {
     async findByCompanyId(@Param('companyId', ParseIntPipe) companyId: number, @Req() req) {
         const token = req.headers.authorization;
         return this.schedulingCompanyService.findByCompanyId(companyId, token);
+    }
+
+    @Get('reports/completed/:companyId/:month/:year')
+    @UseGuards(AuthGuard('jwt'))
+    async findByServiceCompleted(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Param('month') month: string,
+        @Param('year', ParseIntPipe) year: number,
+        @Req() req
+    ) {
+        const token = req.headers.authorization;
+        return this.reportsCompany.findByServiceCompleted(
+            companyId,
+            month,
+            year,
+            token
+        );
     }
 
     @Put(':id')
