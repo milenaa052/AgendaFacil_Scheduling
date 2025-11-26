@@ -72,6 +72,23 @@ export class SchedulingCompanyController {
         );
     }
 
+    @Get('reports/cancelled/:companyId/:month/:year')
+    @UseGuards(AuthGuard('jwt'))
+    async findByCancelled(
+        @Param('companyId', ParseIntPipe) companyId: number,
+        @Param('month') month: string,
+        @Param('year', ParseIntPipe) year: number,
+        @Req() req
+    ) {
+        const token = req.headers.authorization;
+        return this.reportsCompany.findByServiceCancelled(
+            companyId,
+            month,
+            year,
+            token
+        );
+    }
+
     @Put(':id')
     @UseGuards(AuthGuard('jwt'))
     async update(

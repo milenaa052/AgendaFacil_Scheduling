@@ -107,4 +107,47 @@ export class ReportsService {
 
         return result;
     }
+
+    async findByServiceCancelled(companyId: number, month: string, year: number, token: string) {
+        if (!companyId) {
+            throw new BadRequestException("O ID da empresa é obrigatório!");
+        }
+
+        let company: CompanyResponse;
+        try {
+            const response = await this.http.users.get<CompanyResponse>(`company/${companyId}`, {
+                headers: { Authorization: token }
+            });
+
+            company = response.data;
+        } catch (error) {
+            if (error.response?.status === 404) {
+                throw new NotFoundException('Empresa não encontrada!');
+            }
+
+            throw new BadRequestException(error.response?.data?.message || 'Erro ao validar empresa');
+        }
+
+        const schedulings = await this.schedulingCompanyModel.findAll({
+            where: {
+                companyId,
+                status: SchedulingCompanyStatus.CANCELLED,
+                startDate: {
+                    [Op.like]: `${year}-${String(month).padStart(2, "0")}%`
+                }
+            }
+        });
+
+        if (schedulings.length === 0) {
+            return { total: 0 };
+        }
+
+        const totalCancelled = schedulings.length;
+
+        const result = {
+            totalCancelled: totalCancelled
+        };
+
+        return result;
+    }
 }
