@@ -252,6 +252,7 @@ export class SchedulingCompanyService {
                 endDate: scheduling.endDate,
                 startHour: scheduling.startHour,
                 endHour: scheduling.endHour,
+                repeatScheduling: scheduling.repeatScheduling,
                 budget: scheduling.budget,
                 status: scheduling.status,
 
