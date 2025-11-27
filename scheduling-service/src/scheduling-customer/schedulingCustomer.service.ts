@@ -43,7 +43,7 @@ export class SchedulingCustomerService {
     ) {}
 
     async create(createSchedulingCustomerDto: CreateSchedulingCustomerDto, token: string) {
-        const requiredFields = ['companyId', 'customerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour'];
+        const requiredFields = ['companyId', 'customerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour', 'status'];
         for (const field of requiredFields) {
             if (!createSchedulingCustomerDto[field]) {
                 throw new BadRequestException('Todos os campos são obrigatórios!');
@@ -299,8 +299,12 @@ export class SchedulingCustomerService {
             throw new BadRequestException('Empresa não pode ser alterado!');
         }
 
-        if (dto.schedulingCompanyId && dto.schedulingCompanyId !== scheduling.schedulingCompanyId) { 
-            throw new BadRequestException('Agendamento da empresa não pode ser alterado!');
+        if (scheduling.schedulingCompanyId) {
+            if (dto.schedulingCompanyId) {
+                if (dto.schedulingCompanyId !== scheduling.schedulingCompanyId) {
+                    throw new BadRequestException('Agendamento da empresa não pode ser alterado se já possuir um valor.');
+                }
+            }
         }
 
         const validStatuses = [
@@ -312,13 +316,7 @@ export class SchedulingCustomerService {
             throw new BadRequestException('Status deve ser CONFIRMED, CANCELLED ou COMPLETED');
         }
 
-        const allowedFields = ['startDate', 'endDate', 'startHour', 'endHour', 'status'];
-        for (const key of allowedFields) {
-            if (dto[key] !== undefined) {
-                scheduling[key] = dto[key];
-            }
-        }
-
+        Object.assign(scheduling, dto);
         await scheduling.save();
 
         const cacheKey = `customer:${scheduling.customerId}`;

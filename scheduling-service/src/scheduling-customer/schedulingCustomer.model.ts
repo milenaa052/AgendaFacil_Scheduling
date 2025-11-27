@@ -9,7 +9,7 @@ export enum SchedulingCustomerStatus {
 export interface SchedulingCustomerCreationAttributes {
     companyId: number;
     customerId: number;
-    schedulingCompanyId: number;
+    schedulingCompanyId?: number;
     title: string;
     startDate: string;
     endDate: string;
