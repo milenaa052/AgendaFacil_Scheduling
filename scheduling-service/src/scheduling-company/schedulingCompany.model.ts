@@ -9,18 +9,18 @@ export enum SchedulingCompanyStatus {
 
 export interface SchedulingCompanyCreationAttributes {
     companyId: number;
-    customerId: number;
-    schedulingCustomerId: number;
+    customerId?: number;
+    schedulingCustomerId?: number;
     title: string;
     startDate: string;
     endDate: string;
     startHour: string;
     endHour: string;
-    repeatScheduling: string;
-    budget: number;
+    repeatScheduling?: string;
+    budget?: number;
     status: SchedulingCompanyStatus;
     notificationSent: boolean;
-    lastExtension: Date;
+    lastExtension?: Date;
 }
 
 @Table({ tableName: 'SchedulingCompany', timestamps: false, modelName: 'SchedulingCompany' })
