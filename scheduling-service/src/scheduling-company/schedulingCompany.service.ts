@@ -42,7 +42,7 @@ export class SchedulingCompanyService {
     ) {}
 
     async create(createSchedulingCompanyDto: CreateSchedulingCompanyDto, token: string): Promise<SchedulingCompany> {
-        const requiredFields = ['companyId', 'title', 'startDate', 'endDate', 'startHour', 'endHour', 'status', 'notificationSent'];
+        const requiredFields = ['companyId', 'title', 'startDate', 'endDate', 'startHour', 'endHour', 'status'];
         for (const field of requiredFields) {
             if (!createSchedulingCompanyDto[field]) {
                 throw new BadRequestException('Todos os campos são obrigatórios!');
@@ -329,11 +329,17 @@ export class SchedulingCompanyService {
             shouldUpdateLastExtension = true;
         }
 
+        const allowedFields = ['title', 'startDate', 'endDate', 'startHour', 'endHour', 'repeateScheduling', 'budget', 'status', 'notificationSent', 'lastExtension'];
+        for (const key of allowedFields) {
+            if (dto[key] !== undefined) {
+                scheduling[key] = dto[key];
+            }
+        }
+
         if (shouldUpdateLastExtension) {
             scheduling.lastExtension = new Date();
         }
 
-        Object.assign(scheduling, dto);
         await scheduling.save();
 
         const cacheKey = `company:${scheduling.companyId}`;

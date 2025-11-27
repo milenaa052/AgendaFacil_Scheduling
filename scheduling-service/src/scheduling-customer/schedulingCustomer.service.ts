@@ -43,7 +43,7 @@ export class SchedulingCustomerService {
     ) {}
 
     async create(createSchedulingCustomerDto: CreateSchedulingCustomerDto, token: string) {
-        const requiredFields = ['companyId', 'customerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour', 'status'];
+        const requiredFields = ['companyId', 'customerId', 'title', 'startDate', 'endDate', 'startHour', 'endHour'];
         for (const field of requiredFields) {
             if (!createSchedulingCustomerDto[field]) {
                 throw new BadRequestException('Todos os campos são obrigatórios!');
@@ -316,7 +316,13 @@ export class SchedulingCustomerService {
             throw new BadRequestException('Status deve ser CONFIRMED, CANCELLED ou COMPLETED');
         }
 
-        Object.assign(scheduling, dto);
+        const allowedFields = ['title', 'startDate', 'endDate', 'startHour', 'endHour', 'status'];
+        for (const key of allowedFields) {
+            if (dto[key] !== undefined) {
+                scheduling[key] = dto[key];
+            }
+        }
+
         await scheduling.save();
 
         const cacheKey = `customer:${scheduling.customerId}`;
